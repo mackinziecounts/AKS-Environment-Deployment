@@ -125,11 +125,17 @@ function Deploy-BicepRG {
         [String]$rgName,
 
         [Parameter(Mandatory, ValueFromPipeline)]
-        [String]$rgLocation
+        [String]$rgLocation,
+
+        [Parameter(ValueFromPipeline)]
+        [String]$expectedRGName
     )
+    begin {
+        $expectedRGName = $rgName+$rgLocation
+    }
     process {
-        if (Get-AzResourceGroup -ResourceGroupName $rgName -ErrorAction SilentlyContinue) {
-            Write-Host "The ResourceGroup [$($rgName)] has already been created."
+        if (Get-AzResourceGroup -ResourceGroupName $expectedRGName -ErrorAction SilentlyContinue) {
+            Write-Host "The ResourceGroup [$($expectedRGName)] has already been created."
         } else {
             New-AzDeployment -Location $Location -Name $Name `
             -TemplateFile $TemplateFile -rgName $rgName -rgLocation $rgLocation
@@ -149,7 +155,8 @@ $resourceGroupNameParams = @{
 }
 #Deploy Resource Groups
 $resourceGroupNameParams.rgName | ForEach-Object {
-    Deploy-BicepRG -Name $PSItem+$deploy @resourceGroupDeploymentParams -rgName $PSItem 
+    $rgDeploymentName = $PSItem+$deploy
+    Deploy-BicepRG @resourceGroupDeploymentParams -Name $rgDeploymentName -rgName $PSItem 
 }
 
 #Azure Container Registry Function
