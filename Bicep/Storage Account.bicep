@@ -5,11 +5,11 @@ param storSku string = 'Standard_GRS'
 param storKind string = 'StorageV2'
 param storTier string = 'Hot'
 param StorAccName string
-
+//storage account name must be lowercase
 
 
 resource symbolicname 'Microsoft.Storage/storageAccounts@2022-05-01' = {
-  name: StorAccName
+  name: toLower(StorAccName)
   location: storLocation
   sku: {
     name: storSku
