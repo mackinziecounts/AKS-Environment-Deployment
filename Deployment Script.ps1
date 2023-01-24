@@ -182,11 +182,10 @@ function Deploy-BicepACR {
 }
 
 #Set Variables for Azure Container Registry 
-
 $acrDeployParams = @{
-    ResourceGroupName = $resourceGroupNameParams.rgName[3]
+    ResourceGroupName = $resourceGroupNameParams.rgName[3]+$resourceGroupDeploymentParams.Location
     TemplateFile = ''
-    checkACRName = $resourceGroupNameParams.rgName[3]+'bmprojacr'
+    checkACRName = $resourceGroupNameParams.rgName[3]+$resourceGroupDeploymentParams.Location+'bmprojacr'
 }
 
 #Deploy Azure Container Registry
