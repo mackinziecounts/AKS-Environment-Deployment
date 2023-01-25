@@ -251,21 +251,24 @@ function Deploy-BicepKeyVault {
         [String]$KeyVaultName,
 
         [Parameter(Mandatory, ValueFromPipeline)]
-        [String]$keyVaultTenantId
+        [String]$keyVaultTenantId,
+
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [String]$keyVaultObjectId
     )
     process {
         if (Get-AzKeyVault -Name $KeyVaultName -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue) {
                 Write-Host "The Key Vault [$($KeyVaultName)] has already been created."
             } else {
                 New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile `
-                -keyVaultTenantId $keyVaultTenantId -Mode Incremental
+                -KeyVaultName $KeyVaultName -keyVaultTenantId $keyVaultTenantId -keyVaultObjectId $keyVaultObjectId -Mode Incremental
             }
     }
 }
 
 #Set Variables for Key Vault
 $keyVaultParams = @{
-    ResourceGroupName = ''
+    ResourceGroupName = $resourceGroupNameParams.rgName[2]+$resourceGroupDeploymentParams.Location
     TemplateFile = ''
     KeyVaultName = ''
     keyVaultTenantId = $keyVaultTenantId
@@ -280,8 +283,8 @@ $tenantdeployparams.pseudoRootMGName
 $MngGroupPrefix = '/providers/Microsoft.Management/managementGroups/'
 $childMngGroup = 'Child1'
 $completeMngGroupScope = $MngGroupPrefix+$childMngGroup+$tenantdeployparams.pseudoRootMGName
-$spJSON = $spHashTable | ConvertTo-Json -Depth 4 
-Set-AzKeyVaultSecret -VaultName '' -Name $sp.DisplayName -SecretValue $spJSON
+$spJSON = $spHashTable | ConvertTo-Json -Depth 4 | ConvertTo-SecureString -AsPlainText
+Set-AzKeyVaultSecret -VaultName $keyVaultParams.KeyVaultName -Name $sp.DisplayName -SecretValue $spJSON
 New-AzRoleAssignment -ApplicationId $sp.AppId -RoleDefinitionName 'Contributor' -Scope $completeMngGroupScope
 
 #SSH Key Function
