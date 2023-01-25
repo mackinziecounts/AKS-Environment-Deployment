@@ -202,13 +202,16 @@ function Deploy-BicepStor {
         [String]$TemplateFile,
 
         [Parameter(Mandatory, ValueFromPipeline)]
-        [String]$StorAccName
+        [String]$StorAccName,
+
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [String]$StorageDeployment
     )
     process {
         if (Get-AzStorageAccount -Name $StorAccName.ToLower() -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue) {
                 Write-Host "The Storage Account [$($StorAccName)] has already been created."    
             } else {
-                New-AzResourceGroupDeployment -Name 'storagedeployment' -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile `
+                New-AzResourceGroupDeployment -Name $StorageDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile `
                 -StorAccName $StorAccName -Mode Incremental
             }
     }
@@ -218,6 +221,7 @@ $storageAccountParams = @{
     ResourceGroupName = $resourceGroupNameParams.rgName[1]+$resourceGroupDeploymentParams.Location
     TemplateFile = ''
     StorAccName = $resourceGroupNameParams.rgName[1]+$resourceGroupDeploymentParams.Location+'bmproj'
+    StorageDeployment = ''
 }
 
 #Deploy Storage Account
