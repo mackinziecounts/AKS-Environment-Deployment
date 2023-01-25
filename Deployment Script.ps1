@@ -298,13 +298,16 @@ function Deploy-BicepSSH {
         [String]$TemplateFile,
 
         [Parameter(Mandatory, ValueFromPipeline)]
-        [String]$sshKeyName
+        [String]$sshKeyName,
+        
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [String]$sshDeploymentName
     )
     process {
         if (Get-AzSshKey -Name $sshKeyName -ErrorAction SilentlyContinue) {
                 Write-Host "The SSH Key [$($sshKeyName)] has already been created."
             } else {
-                New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile `
+                New-AzResourceGroupDeployment -Name $sshDeploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile `
                 -sshKeyName $sshKeyName -Mode Incremental
             }
     }
@@ -312,9 +315,10 @@ function Deploy-BicepSSH {
 
 #SSH Key Params
 $bicepSshParams = @{
-    ResourceGroupName = $resourceGroupNameParams.rgName[0]
+    ResourceGroupName = $resourceGroupNameParams.rgName[0]+$resourceGroupDeploymentParams.Location
     TemplateFile = ''
     sshKeyName = ''
+    sshDeploymentName = ''
 }
 
 #SSH Key Deploy
