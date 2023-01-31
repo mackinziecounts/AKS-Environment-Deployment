@@ -2,10 +2,16 @@
 
 @description('GeoLocation of the SSH Key')
 param sshLocation string = resourceGroup().location
+
 @description('Name of the SSH Key')
 param sshKeyName string
+
+param sshRSAPublickey string
 
 resource symbolicname 'Microsoft.Compute/sshPublicKeys@2022-08-01' = {
   name: sshKeyName
   location: sshLocation
+  properties: {
+    publicKey: sshRSAPublickey
+  }
 }
