@@ -345,14 +345,17 @@ function Deploy-BicepAKS {
         [String]$linuxAdminUsername,
 
         [Parameter(Mandatory, ValueFromPipeline)]
-        [String]$sshRSAPublickey
+        [String]$sshRSAPublickey,
+
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [String]$dnsPrefix
     )
     process {
-        if (Get-AzAksCluster -Name $clusterName -ErrorAction SilentlyContinue) {
+        if (Get-AzAksCluster -Name $clusterName -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue) {
                 Write-Host "The AKS Cluster [$($clusterName)] has already been created."
             } else {
-                New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile `
-                -linuxAdminUsername $linuxAdminUsername -sshRSAPublickey $sshRSAPublickey -Mode Incremental
+                New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile -dnsPrefix $dnsPrefix `
+                -linuxAdminUsername $linuxAdminUsername -sshRSAPublickey $sshRSAPublickey -clusterName $clusterName -Mode Incremental
             }
     }
 }
@@ -364,6 +367,7 @@ $aksParams = @{
     clusterName= ''
     linuxAdminUsername = ''
     sshRSAPublickey = ''
+    dnsPrefix = ''
 }
 
 
