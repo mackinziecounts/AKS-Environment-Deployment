@@ -305,17 +305,25 @@ function Deploy-BicepSSH {
         [String]$sshKeyName,
         
         [Parameter(Mandatory, ValueFromPipeline)]
-        [String]$sshDeploymentName
+        [String]$sshDeploymentName,
+
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [String]$sshRSAPublickey
     )
     process {
         if (Get-AzSshKey -Name $sshKeyName -ErrorAction SilentlyContinue) {
                 Write-Host "The SSH Key [$($sshKeyName)] has already been created."
             } else {
                 New-AzResourceGroupDeployment -Name $sshDeploymentName -ResourceGroupName $ResourceGroupName -TemplateFile $TemplateFile `
-                -sshKeyName $sshKeyName -Mode Incremental
+                -sshKeyName $sshKeyName -sshRSAPublickey $sshRSAPublickey -Mode Incremental
             }
     }
 }
+
+#enter path to save the private key
+Write-Output '.txt' | ssh-keygen -q -n '' -y
+$newpubkeypath = ".txt.pub"
+
 
 #SSH Key Params
 $bicepSshParams = @{
@@ -323,6 +331,7 @@ $bicepSshParams = @{
     TemplateFile = ''
     sshKeyName = ''
     sshDeploymentName = ''
+    sshRSAPublickey = Get-Content -Path $newpubkeypath
 }
 
 #SSH Key Deploy
