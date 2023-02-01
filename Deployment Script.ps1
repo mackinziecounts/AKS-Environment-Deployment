@@ -395,14 +395,20 @@ function Deploy-azAdUser {
         [String]$userDisplayName,
 
         [Parameter(Mandatory, ValueFromPipeline)]
-        [String]$userPrincipalName
+        [String]$userPrincipalName,
+
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [String]$MailNickname
     )
+    begin {
+        $userSecPW = Get-Content $pwFileLocation -ErrorAction Continue | ConvertTo-SecureString -PipelineVariable $PSItem -AsPlainText -ErrorAction Continue
+    }
     process {
         if (Get-AzADUser -DisplayName $userDisplayName -ErrorAction SilentlyContinue) {
                 Write-Host "The AZ AD User [$($userDisplayName)] has already been created."
             } else {
-                $userSecPW = Get-Content $pwFileLocation | ConvertTo-SecureString -String $PSItem -AsPlainText
-New-AzADUser -DisplayName $userDisplayName -UserPrincipalName $userPrincipalName -Password $userSecPW -ForceChangePasswordNextLogin
+                New-AzADUser -DisplayName $userDisplayName -UserPrincipalName $userPrincipalName -Password $userSecPW `
+                -MailNickname $MailNickname -AccountEnabled $true -ForceChangePasswordNextLogin
             }
     }
 }
@@ -412,6 +418,7 @@ $azAdUserParams = @{
     pwFileLocation = ''
     userDisplayName = ''
     userPrincipalName = ''
+    MailNickname = ''
 }
 
 #Deploy Azure AD User
@@ -422,7 +429,7 @@ function Deploy-azAdUserRoleAssignment {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory, ValueFromPipeline)]
-        [String]$TemplateFile,
+        [String]$Scope,
 
         [Parameter(Mandatory, ValueFromPipeline)]
         [String]$userRole,
@@ -431,35 +438,26 @@ function Deploy-azAdUserRoleAssignment {
         [String]$userPrincipalName,
 
         [Parameter(Mandatory, ValueFromPipeline)]
-        [String]$Location,
-
-        [Parameter(Mandatory, ValueFromPipeline)]
-        [String]$Name,
-
-        [Parameter(Mandatory, ValueFromPipeline)]
         [String]$principalId
     )
     process {
-        if ((Get-AzRoleAssignment -SignInName $userPrincipalName `
-        | Where-Object -Property 'RoleDefinitionName' -eq $userRole) -ErrorAction SilentlyContinue) {
+        if (Get-AzRoleAssignment -SignInName $userPrincipalName -ErrorAction SilentlyContinue `
+        | Where-Object -Property 'RoleDefinitionName' -eq $userRole -ErrorAction SilentlyContinue) {
                 Write-Host "The AZ AD User Role Assignment [$($userRole)] has already been assigned to [$($userPrincipalName)]."
             } else {
-                New-AzTenantDeployment -Location $Location -Name $Name `
-            -TemplateFile $TemplateFile -userRole $userRole -userPrincipalName $userPrincipalName -principalId $principalId
+                New-AzRoleAssignment -ObjectId $principalId -RoleDefinitionName $userRole -Scope $Scope
             }
     }
 }
 
-
-$userPrincipal = Get-AzADUser -DisplayName $azAdUserParams.userDisplayName
 #AZ AD User Role Assignment Params
+$userPrincipal = Get-AzADUser -DisplayName $azAdUserParams.userDisplayName
+$mngScope = Get-AzManagementGroup -GroupId $tenantdeployparams.pseudoRootMGName
 $azAdUserRoleAssignmentParams = @{
-    TemplateFile = ''
     userRole = 'Contributor'
-    userPrincipalName = ''
-    Location = ''
-    Name = ''
+    userPrincipalName = $azAdUserParams.userPrincipalName
     principalId = $userPrincipal.Id
+    Scope = $mngScope
 }
 
 #Deploy AZ AD User Role Assignment
