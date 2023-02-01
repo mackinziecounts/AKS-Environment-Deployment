@@ -21,3 +21,15 @@ The methodology of the PowerShell deployment script is as follows:
 3. Call upon the function, to deploy the resource, and supply necessary variables
 
 The defined methodoly does make the deployment script a little longer than needed, however, it makes it easier to understand what is being done.  
+
+A successful deployment of these resources requires several things:
+1. Template deployments must be enabled in your AZ AD Tenant.
+2. You must have proper permissions to deploy the resources.
+3. You must have the correct Azure PowerShell modules installed
+4. You must have Bicep installed. 
+
+Required Setup:
+1. Download the PowerShell script and Bicep files to your local system
+2. Edit the PS script with your own custom resource names
+3. Edit the PS script with the file location of each Bicep file. 'TemplateURI' parameter may be used instead of Template file,
+  however this will require additional editorial work to deploy. 
